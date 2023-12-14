@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    @Query("SELECT p FROM Post p INNER JOIN UserFollower uf ON p.username = uf.username WHERE uf.follower = :currentUser ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p LEFT JOIN Connection con ON p.username = con.target.username AND con.source.username = :currentUser WHERE p.username = :currentUser OR con.target.username IS NOT NULL ORDER BY p.createdAt DESC")
     List<Post> findFeedForCurrentUser(@Param("currentUser") String currentUser);
 
     @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Post p WHERE p.id = :postId AND p.username = :username")

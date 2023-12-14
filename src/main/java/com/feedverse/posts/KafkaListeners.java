@@ -2,70 +2,33 @@ package com.feedverse.posts;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.feedverse.posts.model.UserFollower;
+import com.feedverse.posts.repository.UserRepository;
 import com.feedverse.posts.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-
 @Service
 public class KafkaListeners {
 
     @Autowired
-    private UserService userFollowerService;
-    private final ObjectMapper objectMapper;
+    UserRepository repo;
 
-    @Autowired
-    public KafkaListeners(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    @KafkaListener(topics = "user-follow", groupId = "group1")
+    public void listenUserFollow(String message) {
+        String[] res = message.split("#");
+        System.out.println("Received follow message: " + message);
+
+        UserFollower obj = new UserFollower();
+        obj.setUsername(res[0]);
+        obj.setFollower(res[1]);
+        repo.save(obj);
     }
 
-    // @KafkaListener(topics = "userFollowTopic")
-    // public void listenUserFollows(String message) {
-    // try{
-    // UserFollower userFollower=objectMapper.readValue(message,UserFollower.class);
-    // userFollowerService.addFollower(userFollower.getUsername(),userFollower.getFollower());
-    // }
-    // catch (Exception e){
-    // e.printStackTrace();
-    // }
-    // }
-
-    // @KafkaListener(topics = "userUnfollowTopic", groupId = "unfollow-group")
-    // public void listenUserUnfollows(String message) {
-    // try{
-    // UserFollower userFollower=objectMapper.readValue(message,UserFollower.class);
-    // userFollowerService.removeFollower(userFollower.getUsername(),userFollower.getFollower());
-    // }
-    // catch (Exception e){
-    // e.printStackTrace();
-    // }
-    // }
-    @KafkaListener(topics = "userFollowTopic", groupId = "follow-group")
-    public void listenUserFollows(String msg) {
-        System.out.println("consumer consume the events  " + msg);
-        try {
-            HashMap<String, String> userFollower = objectMapper.readValue(msg,
-                    new TypeReference<HashMap<String, String>>() {
-                    });
-            userFollowerService.addFollower(userFollower.get("UserName"), userFollower.get("FollowerName"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @KafkaListener(topics = "userUnfollowTopic", groupId = "unfollow-group")
-    public void listenUserUnfollows(String msg) {
-        System.out.println("consumer consume the events {} " + msg);
-        try {
-            HashMap<String, String> userFollower = objectMapper.readValue(msg,
-                    new TypeReference<HashMap<String, String>>() {
-                    });
-            userFollowerService.removeFollower(userFollower.get("UserName"), userFollower.get("FollowerName"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @KafkaListener(topics = "user-unfollow", groupId = "group1")
+    public void listenUserUnfollow(String message) {
+        System.out.println("Received unfollow message: " + message);
+        String[] res = message.split("#");
     }
 }

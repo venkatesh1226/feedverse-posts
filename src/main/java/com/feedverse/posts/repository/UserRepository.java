@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface UserRepository extends JpaRepository<UserFollower, Long> {
     @Query("SELECT COUNT(p) FROM Post p WHERE p.username = :username")
     Long getUserPostsCount(@Param("username") String username);
+
     @Transactional
     @Modifying
     @Query("DELETE FROM UserFollower uf WHERE uf.username = :username AND uf.follower = :follower")
